@@ -1,0 +1,42 @@
+body {
+  background-color: #333;
+  color: #fff;
+}
+
+.app {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  color: #fff;
+}
+
+.todoList {
+  list-style-type: none;
+  padding: 0;
+}
+
+.todoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #555;
+}
+
+.todoTitle {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.completed {
+  color: #4caf50; /* зеленый для выполненных задач */
+}
+
+.notCompleted {
+  color: #f44336; /* красный для невыполненных задач */
+}
