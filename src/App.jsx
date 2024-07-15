@@ -1,106 +1,64 @@
-import { useState, useEffect } from "react";
-import debounce from "lodash.debounce";
+import { useState } from "react";
+import {
+  useFetchTodos,
+  useAddTodo,
+  useUpdateTodo,
+  useDeleteTodo,
+  useTodos,
+} from "./hooks";
+import TodoForm from "./components/TodoForm";
+import TodoItem from "./components/TodoItem";
 import styles from "./App.module.css";
 
-const API_URL = "http://localhost:3000/todo";
-
-function App() {
-  const [todos, setTodos] = useState([]);
-  const [allServerTodos, setAllServerTodos] = useState([]);
+const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSorted, setIsSorted] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState(""); 
-  const [isProcessing, setIsProcessing] = useState(false); 
-  const [currentIndex, setCurrentIndex] = useState(0); 
+  const [loadingMessage, setLoadingMessage] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    fetch(API_URL)
-      .then((response) => response.json())
-      .then((data) => {
-        setAllServerTodos(data);
-      });
-  }, []);
+  const {
+    todos,
+    allServerTodos,
+    setAllServerTodos,
+    setTodos,
+    currentIndex,
+    setCurrentIndex,
+  } = useTodos();
+  useFetchTodos(setAllServerTodos);
+  const addTodo = useAddTodo(
+    setTodos,
+    allServerTodos,
+    currentIndex,
+    setCurrentIndex,
+    setLoadingMessage,
+    setIsProcessing
+  );
+  const updateTodo = useUpdateTodo(
+    setTodos,
+    setLoadingMessage,
+    setIsProcessing
+  );
+  const deleteTodo = useDeleteTodo(
+    setTodos,
+    setLoadingMessage,
+    setIsProcessing
+  );
 
-  const requestAddToDO = () => {
-    if (currentIndex >= allServerTodos.length) return; 
-
-    const newTodo = allServerTodos[currentIndex]; 
-    setLoadingMessage("Loading..."); 
-    setIsProcessing(true); 
-
-    fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-      },
-      body: JSON.stringify(newTodo),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setTodos((prevTodos) => [...prevTodos, data]); 
-        setCurrentIndex((prevIndex) => prevIndex + 1); 
-        setTimeout(() => {
-          setIsProcessing(false);
-          setLoadingMessage(""); 
-        }, 2000);
-      });
-  };
-
-  const requestUpdateToDO = (id, updatedTodo) => {
-    setLoadingMessage("Updating..."); 
-    setIsProcessing(true); 
-
-    fetch(`${API_URL}/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-      },
-      body: JSON.stringify(updatedTodo),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setTodos((prevTodos) =>
-          prevTodos.map((todo) => (todo.id === id ? data : todo))
-        );
-        setTimeout(() => {
-          setIsProcessing(false);
-          setLoadingMessage(""); 
-        }, 2000);
-      });
-  };
-
-  const requestDeleteToDO = (id) => {
-    setLoadingMessage("Deleting..."); 
-    setIsProcessing(true); 
-
-    fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-    }).then(() => {
-      setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
-      setTimeout(() => {
-        setIsProcessing(false);
-        setLoadingMessage(""); 
-      }, 2000);
-    });
-  };
-
-  const handleSearch = debounce((term) => {
+  const handleSearch = (term) => {
     setSearchTerm(term);
-  }, 500);
+  };
 
   const toggleSort = () => {
     setIsSorted(!isSorted);
   };
 
-  const getFilteredTodos = () => {
-    let filtered = todos.filter((todo) =>
-      todo.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    if (isSorted) {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    }
-    return filtered;
-  };
+  const filteredTodos = todos.filter((todo) =>
+    todo.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isSorted) {
+    filteredTodos.sort((a, b) => a.title.localeCompare(b.title));
+  }
 
   return (
     <div className={styles.app}>
@@ -110,47 +68,28 @@ function App() {
         </div>
       )}
       <h1>Todo List</h1>
-      <div className={styles.controls}>
-        <button onClick={requestAddToDO} disabled={isProcessing}>
-          Add todo
-        </button>
-        <input
-          type="text"
-          placeholder="Search..."
-          onChange={(e) => handleSearch(e.target.value)}
-        />
-        <button onClick={toggleSort} disabled={isProcessing}>
-          {isSorted ? "Unsort" : "Sort A-Z"}
-        </button>
-      </div>
+      <TodoForm
+        addTodo={addTodo}
+        handleSearch={handleSearch}
+        toggleSort={toggleSort}
+        isSorted={isSorted}
+        isProcessing={isProcessing}
+      />
       <ul className={styles.todoList}>
-        {getFilteredTodos().map(({ id, title, completed }) => (
-          <li key={id} className={styles.todoItem}>
-            <span className={styles.todoTitle}>{title}</span>
-            <span
-              className={completed ? styles.completed : styles.notCompleted}
-            >
-              {completed ? "Completed" : "Not Completed"}
-            </span>
-            <button
-              onClick={() =>
-                requestUpdateToDO(id, { title, completed: !completed })
-              }
-              disabled={isProcessing}
-            >
-              Update
-            </button>
-            <button
-              onClick={() => requestDeleteToDO(id)}
-              disabled={isProcessing}
-            >
-              Delete
-            </button>
-          </li>
+        {filteredTodos.map(({ id, title, completed }) => (
+          <TodoItem
+            key={id}
+            id={id}
+            title={title}
+            completed={completed}
+            updateTodo={updateTodo}
+            deleteTodo={deleteTodo}
+            isProcessing={isProcessing}
+          />
         ))}
       </ul>
     </div>
   );
-}
+};
 
 export default App;
