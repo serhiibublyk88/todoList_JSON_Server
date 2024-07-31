@@ -2,7 +2,7 @@
   "todo": [
     {
       "title": "nemo perspiciatis repellat ut dolor libero commodi blanditiis omnis",
-      "completed": false,
+      "completed": true,
       "id": "30"
     },
     {
@@ -1999,6 +1999,16 @@
     {
       "id": "29",
       "title": "laborum aut in quam",
+      "completed": true
+    },
+    {
+      "id": "30",
+      "title": "nemo perspiciatis repellat ut dolor libero commodi blanditiis omnis",
+      "completed": false
+    },
+    {
+      "id": "31",
+      "title": "repudiandae totam in est sint facere fuga",
       "completed": true
     },
     {
